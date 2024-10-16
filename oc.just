@@ -1,10 +1,10 @@
 [script]
-oc-login project="dt-av-tas": (_check-cmd "oc")
+oc-login project: (_check-cmd "oc")
     source .env
     export HTTPS_PROXY="$OC_PROXY"
 
     if ! oc whoami >/dev/null 2>&1; then
-      oc login -u "$QLF_DEV_ACCOUNT" https://api.dt.ocp.tc.corp:6443
+      oc login -u "$OC_USER" "$OC_API"
       oc registry login
     fi
 
@@ -14,10 +14,9 @@ oc-logout: (_check-cmd "oc")
     oc logout
 
 [script]
-oc-port-forward project="dt-av-tas" instance="tas" labels="" *ports="": (_check-cmd "oc")
-    # `labels` is a comma-separated list to identify the pod, examples:
-    # - "app.kubernetes.io/name=tas-gis-server"
-    # - "postgres-operator.crunchydata.com/role=pgbouncer"
+oc-port-forward project instance labels *ports: (_check-cmd "oc")
+    # `labels` is a comma-separated list to identify the pod,
+    # for example: "app.kubernetes.io/name=my-app"
     # A label to filter the instance is added automatically.
     # `ports` is [<local_port>:]<remote_port> [...[<local_port_n>:]<remote_port_n>]
 
