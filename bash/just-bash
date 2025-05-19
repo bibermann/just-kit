@@ -1,0 +1,106 @@
+#!/usr/bin/env bash
+
+# NOTE: This file needs to be sourced.
+
+success_messages=()
+error_messages=()
+
+if command -v nvm >/dev/null 2>&1; then
+  nvm use
+  success_messages+=("✔ Enabled node environment for nvm/yarn.")
+else
+  error_messages+=("✗ No node environment: nvm not found.")
+fi
+
+# Example for a typer CLI wrapper script:
+#   #!/usr/bin/env bash
+#   set -euo pipefail
+#
+#   GIT_ROOT="$(git rev-parse --show-toplevel)"
+#
+#   poetry run -P "${GIT_ROOT}" python "${GIT_ROOT}/scripts/foo.py" "$@"
+# Example for a just recipe that will have completions:
+#   [no-cd]
+#   minio *TYPER_ARGS:
+#       @"{{justfile_directory()}}/scripts/foo" {{TYPER_ARGS}}
+# Example for a just recipe that will have completions using a seperate completer:
+#   [no-cd]
+#   [script]
+#   logs *TYPER_ARGS:
+#       "{{justfile_directory()}}/scripts/foo.sh" {{TYPER_ARGS}}
+#       exit 0
+#       "{{justfile_directory()}}/scripts/foo" # last command is used as completer
+
+# Define custom _just function that integrates multiple recipe completions
+_just() {
+  # Check if we're completing a known recipe
+  if [[ ${COMP_CWORD} -ge 2 ]]; then
+    local current_recipe="${COMP_WORDS[1]}"
+
+    # Find the index of the current recipe in our array
+    local recipe_index=-1
+    for i in "${!just_recipe_names[@]}"; do
+      if [[ "${just_recipe_names[$i]}" == "$current_recipe" ]]; then
+        recipe_index=$i
+        break
+      fi
+    done
+
+    # If we found a matching recipe, handle its completion
+    if [[ $recipe_index -ne -1 ]]; then
+      # Adjust COMP_WORDS and COMP_CWORD to make it look like we're completing the recipe directly
+      local recipe_words=("${just_recipe_cli_paths[$recipe_index]}")
+      local i
+      for ((i = 2; i < ${#COMP_WORDS[@]}; i++)); do
+        recipe_words+=("${COMP_WORDS[i]}")
+      done
+
+      # Set the COMP variables for the recipe completion function
+      COMP_WORDS=("${recipe_words[@]}")
+      COMP_CWORD=$((COMP_CWORD - 1))
+
+      # Call the appropriate completion function
+      ${just_recipe_completion_functions[$recipe_index]} "${just_recipe_cli_paths[$recipe_index]}"
+      return 0
+    fi
+  fi
+
+  # Fall back to the original just completion for all other cases
+  _original_just "$@"
+}
+
+if command -v just >/dev/null 2>&1; then
+  recipes_with_typer_completion="$(just -l --list-heading '' --list-prefix '' | \grep '\*TYPER_ARGS$' | awk '{print $1}')"
+
+  if [ -n "$recipes_with_typer_completion" ]; then
+    # Eval the `just` completion code, renaming the completion function _just.
+    # The complete action will still trigger the function _just,
+    # which we will overwrite later, so we don't need to re-run the complete command.
+    eval "$(just --completions bash | sed 's/^_just/_original_just/')"
+
+    # Parse recipes into arrays
+    just_recipe_names=()
+    just_recipe_cli_paths=()
+    while read -r name; do
+      just_recipe_names+=("$name")
+      just_recipe_cli_paths+=("$(eval "echo $(just 2>&1 -n "$name" | tail -1)")")
+    done <<<"$recipes_with_typer_completion"
+    just_recipe_completion_functions=() # Will be populated below
+
+    # Eval the completion code for all recipes
+    for i in "${!just_recipe_names[@]}"; do
+      just_recipe_completion_code="$("${just_recipe_cli_paths[$i]}" --show-completion)"
+      just_recipe_completion_function="$(echo "$just_recipe_completion_code" | sed -n 's/^\(_[^(]*\)().*/\1/p' | head -1)"
+      just_recipe_completion_functions+=("$just_recipe_completion_function")
+      eval "$just_recipe_completion_code"
+    done
+
+    success_messages+=("✔ Enabled shell completion for just recipes: ${just_recipe_names[*]}")
+  fi
+else
+  error_messages+=("✗ No shell completion for just recipes: just not found.")
+fi
+
+for msg in "${success_messages[@]}"; do echo "$msg"; done
+for msg in "${error_messages[@]}"; do echo 1>&2 "$msg"; done
+if [ ${#error_messages[@]} -gt 0 ]; then return 1; fi
