@@ -6,7 +6,7 @@ ROOT_DIR="$(dirname -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 JUSTFILE=$(find "$PWD" -maxdepth 1 -type f -name "[Jj]ustfile" | head -n1)
 if [[ -z "$JUSTFILE" ]]; then
   echo "Creating '$PWD/justfile'"
-  cat <<"EOF" >justfile
+  cat <<EOF >justfile
 import '$ROOT_DIR/core.just'
 import '$ROOT_DIR/pick/pick.just'
 

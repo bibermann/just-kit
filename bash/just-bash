@@ -12,25 +12,6 @@ else
   error_messages+=("✗ No node environment: nvm not found.")
 fi
 
-# Example for a typer CLI wrapper script:
-#   #!/usr/bin/env bash
-#   set -euo pipefail
-#
-#   GIT_ROOT="$(git rev-parse --show-toplevel)"
-#
-#   poetry run -P "${GIT_ROOT}" python "${GIT_ROOT}/scripts/foo.py" "$@"
-# Example for a just recipe that will have completions:
-#   [no-cd]
-#   minio *TYPER_ARGS:
-#       @"{{justfile_directory()}}/scripts/foo" {{TYPER_ARGS}}
-# Example for a just recipe that will have completions using a seperate completer:
-#   [no-cd]
-#   [script]
-#   logs *TYPER_ARGS:
-#       "{{justfile_directory()}}/scripts/foo.sh" {{TYPER_ARGS}}
-#       exit 0
-#       "{{justfile_directory()}}/scripts/foo" # last command is used as completer
-
 # Define custom _just function that integrates multiple recipe completions
 _just() {
   # Check if we're completing a known recipe

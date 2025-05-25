@@ -1,0 +1,24 @@
+[project]
+name = "just-tools"
+version = "0.1.0"
+requires-python = "~=3.12.2"
+dependencies = [
+  "pre-commit>=4.0.1,<5",
+]
+
+[tool.uv]
+package = false
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+pythonVersion = "3.12"
+pythonPlatform = "Linux"
+
+[tool.markdownlint]
+MD013.line_length = 88
+MD013.heading_line_length = 88
+MD013.code_block_line_length = 111
+MD007.indent = 4
+MD024.siblings_only = true
