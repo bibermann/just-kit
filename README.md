@@ -66,21 +66,6 @@ _check-justile-relevance:
     @[ -f .env ]
 ```
 
-### Defining required variables
-
-A `_get-required-variables` recipe may be added to a `*.just` file
-yielding all variables required in the environment
-or the `.env` file in your project root.
-
-All missing variables will be printed so that the user can add them.
-
-Example recipe:
-
-```just
-_get-required-variables:
-    @echo "SECRET_KEY"
-```
-
 ## Running python scripts
 
 You can forward a command to a self-contained python app powered by [uv](https://github.com/astral-sh/uv):
