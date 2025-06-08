@@ -1,7 +1,12 @@
-# just tools
+# just-kit
 
-A selection of pluggable `*.just` files
+A kit of reusable tools and [just](https://github.com/casey/just) recipes
 to ease your daily workflows and maintenance tasks.
+
+Designed as an import manager for your project's `justfile`,
+this kit provides a convenient `*.just` file selection tool
+establishing a flexible way to share useful helper utilities
+with the community and your colleagues.
 
 ## Enhance your project
 
@@ -9,11 +14,13 @@ From within your project root, run `setup.sh` from this repository.
 
 If you already have a `justfile`, it gets extended, otherwise it's created for you.
 
-You will be presented with a pre-filtered list of `*.just` files to select from.
+It will enable and run the `pick` recipe,
+which presents you with a pre-filtered list of `*.just` files to pick from.
 
 Additionally, a `just-bash` symlink is created
-that you may source using `source just-bash` or `. just-bash`
-to profit from auto-completion for Typer scripts. It also runs `nvm use` for you.
+that you may source using `source just-bash`
+to profit from auto-completion for Typer scripts.
+It also runs `nvm use` for you.
 
 ### Re-configure (select just files to import)
 

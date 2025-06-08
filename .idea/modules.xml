@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/just tools.iml" filepath="$PROJECT_DIR$/.idea/just tools.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/just-kit.iml" filepath="$PROJECT_DIR$/.idea/just-kit.iml" />
     </modules>
   </component>
 </project>
