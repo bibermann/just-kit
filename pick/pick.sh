@@ -10,7 +10,7 @@ CHECK_RELEVANCE="$1"
 [ -f .env ] && source .env
 
 # Exit if neither justfile not Justfile exists
-JUSTFILE=$(find . -maxdepth 1 -type f -name "[Jj]ustfile" | head -n1)
+JUSTFILE=$(find . -maxdepth 1 -type f -name "[Jj]ustfile" -o -name "\.[Jj]ustfile" | head -n1)
 [ -n "$JUSTFILE" ] || {
   echo >&2 "ERROR: No justfile found."
   exit 1
