@@ -51,7 +51,7 @@ _just() {
 }
 
 if command -v just >/dev/null 2>&1; then
-  recipes_with_typer_completion="$(just -l --list-heading '' --list-prefix '' | \grep '\*TYPER_ARGS$' | awk '{print $1}')"
+  recipes_with_typer_completion="$(JUST_COLOR=never just -l --list-heading '' --list-prefix '' | \grep -E '\*TYPER_ARGS\b' | awk '{print $1}')"
 
   if [ -n "$recipes_with_typer_completion" ]; then
     # Eval the `just` completion code, renaming the completion function _just.
