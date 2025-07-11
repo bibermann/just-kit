@@ -205,7 +205,7 @@ function get_justfile_recipes() {
       echo "import '$full_path'"
     } >"$temp_file"
 
-    if grep -q "^$recipe_running_this_script:" "$full_path" 2>/dev/null; then
+    if grep -q "^${recipe_running_this_script}[: ]" "$full_path" 2>/dev/null; then
       if [[ ! -z "$justfile_running_this_script" ]]; then
         echo >&2 "Error: Multiple justfiles containing recipe '$recipe_running_this_script': '$justfile_running_this_script', '$path'"
         exit 1
@@ -215,10 +215,10 @@ function get_justfile_recipes() {
       return 1
     fi
 
-    if output="$(JUST_UNSTABLE=1 just --allow-missing --dump --dump-format json -f "$temp_file" 2>&1)"; then
+    if output="$(JUST_UNSTABLE=1 JUST_COLOR=never just --allow-missing --dump --dump-format json -f "$temp_file" 2>&1)"; then
       # Run and evaluate $recipe_checking_relevance recipe if it exists
       if [[ "$CHECK_RELEVANCE" == "true" ]] && grep -q "^$recipe_checking_relevance:" "$full_path" 2>/dev/null; then
-        if JUST_UNSTABLE=1 just --allow-missing -f "$temp_file" "$recipe_checking_relevance" >/dev/null 2>&1; then
+        if JUST_UNSTABLE=1 JUST_COLOR=never just --allow-missing -f "$temp_file" "$recipe_checking_relevance" >/dev/null 2>&1; then
           :
         else
           echo >&2 "Hiding '$path' (recipe '$recipe_checking_relevance' returned non-zero exit code $?)"
@@ -236,7 +236,7 @@ function get_justfile_recipes() {
       return 0
     elif [[ "$output" =~ error:.*unknown\ dependency\ \`(.*)\` ]]; then
       missing_deps+=("${BASH_REMATCH[1]}")
-    elif [[ "$output" =~ error:\ Recipe\ \`.*\`\ first\ defined\b.*\bredefined\b.* ]]; then
+    elif [[ "$output" =~ error:\ Recipe\ \`.*\`\ first\ defined\ .*\ redefined\ .* ]]; then
       need_allow_duplicate_recipes=true
     else
       echo 1>&2 "$output"
