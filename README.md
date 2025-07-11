@@ -10,18 +10,18 @@ with the community and your colleagues.
 
 ## Enhance your project
 
-From within your project root, run the `setup.sh` of this repository.
+From within your project root, run the `setup.sh` script of this repository.
 
-If you already have a `justfile`, it gets extended, otherwise it will be created for you.
+The `setup.sh` script will import and run the `pick` recipe in your `justfile`
+(eventually creating it). It will also create a `just-bash` symlink.
 
-The setup script will enable and run the `pick` recipe,
-which presents you with a pre-filtered list of `*.just` files to pick from.
+The `pick` recipe (run with `just pick`)
+will present you a pre-filtered list of `*.just` files to pick from.
 
-Additionally, a `just-bash` symlink is created
-that you may source using `source just-bash`
-to profit from auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
+The `just-bash` symlink (source with `source just-bash` **in every new shell**) will:
 
-For convenience, it also runs `nvm use` for you.
+- Enable auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
+- Issue `nvm use`, for convenience.
 
 ### Re-configure (select just files to import)
 
@@ -33,17 +33,17 @@ which `*.just` file containing the conflicting recipe(s) should override the oth
 defining the import order.
 Your selection is remembered through a comment next to the import statement.
 
-## Adding features
+## Adding features to your justfile
 
 All `*.just` files located in parent directories and `.just` directories within them
 are considered candidates for the `*.just` file selection.
 
-To add `*.just` files from other locations using `just pick`,
+To select `*.just` files from other locations when using `just pick`,
 add or extend `EXTRA_JUST_ROOTS` variable with the respective paths
 (either in the environment or in the `.env` file in your project root).
 Multiple paths are separated with `:`.
 
-Run `just pick` to select them.
+Run `just pick` to select new `*.just` files.
 
 ### Hiding just files
 
