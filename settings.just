@@ -4,3 +4,6 @@ set allow-duplicate-variables
 set allow-duplicate-recipes
 set unstable
 set positional-arguments
+
+_check-justile-relevance:
+    false
