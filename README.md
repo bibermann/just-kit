@@ -78,7 +78,6 @@ _check-justile-relevance:
 Example recipe to hide a `*.just` file when there is no `.env` file in your project's root:
 
 ```just
-[no-cd]
 _check-justile-relevance:
     @[ -f .env ]
 ```
