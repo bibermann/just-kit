@@ -250,6 +250,7 @@ function get_justfile_recipes() {
 
 # Get options
 options=()
+known_imports=()
 declare -A name_counts
 declare -A unique_name_to_path
 declare -A overrides_array
@@ -282,9 +283,10 @@ for path in "${paths[@]}"; do
       realpath_path="$(realpath "${path/\~/$HOME}" 2>/dev/null || echo "$path")"
 
       if [[ "$realpath_imported" == "$realpath_path" ]]; then
+        known_imports+=("$realpath_imported")
         state=on
         if [[ "$remainder" =~ \#\ *overrides\ +(.*) ]]; then
-          OVERRIDES="${BASH_REMATCH[1]}"
+          OVERRIDES="$imported_path"
         fi
       fi
     fi
@@ -297,13 +299,12 @@ done
 # Present options
 # https://serverfault.com/questions/144939/multi-select-menu-in-bash-script
 cmd=(dialog --separate-output --checklist "Select options:" 0 0 0)
-choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty) || true
-clear -x
-
-if [[ -z "$choices" ]]; then
+if ! choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty); then
+  clear -x
   print_just_source_hint
   exit 0
 fi
+clear -x
 
 declare -A path_to_recipes
 while IFS= read -r choice; do
@@ -505,16 +506,21 @@ while IFS= read -r line; do
   fi
   skip_next_empty_line=0
 
-  for path in "${final_order[@]}"; do
-    if [[ "$line" =~ ^import\ +[\"\'](.*)[\"\'] ]]; then
-      imported_path="${BASH_REMATCH[1]}"
-      realpath_imported="$(realpath "${imported_path/\~/$HOME}" 2>/dev/null || echo "$imported_path")"
+  if [[ "$line" =~ ^import\ +[\"\'](.*)[\"\'] ]]; then
+    imported_path="${BASH_REMATCH[1]}"
+    realpath_imported="$(realpath "${imported_path/\~/$HOME}" 2>/dev/null || echo "$imported_path")"
+    for realpath_path in "${known_imports[@]}"; do
+      if [[ "$realpath_imported" == "$realpath_path" ]]; then
+        continue 2  # skip removed paths imported before
+      fi
+    done
+    for path in "${final_order[@]}"; do
       realpath_path="$(realpath "${path/\~/$HOME}" 2>/dev/null || echo "$path")"
       if [[ "$realpath_imported" == "$realpath_path" ]]; then
-        continue 2
+        continue 2  # skip paths that were selected for import
       fi
-    fi
-  done
+    done
+  fi
   echo "$line" >>"$temp_file"
 done <"$JUSTFILE"
 
