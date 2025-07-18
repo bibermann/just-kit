@@ -28,10 +28,27 @@ The `just-bash` symlink (source with `source just-bash` **in every new shell**) 
 Run `just pick` from within your project tree.
 This is a convenience tool to manage the imports of your project's `justfile`.
 
+#### Duplicate recipes
+
 When there are duplicate recipes, you are asked to choose
 which `*.just` file containing the conflicting recipe(s) should override the other,
 defining the import order.
-Your selection is remembered through a comment next to the import statement.
+
+The selection is remembered through a comment next to the import statement.
+
+When the choice is trivial due to empty recipes or recipes having the comment `dummy`,
+the non-empty or non-dummy recipe will be selected to override the other automatically.
+
+An example dummy recipe that would be selected to be overridden automatically
+(when the other recipe is non-empty and non-dummy):
+
+```just
+# dummy
+[no-exit-message]
+build:
+    echo >&2 "ERROR: No final build recipe added to justfile."
+    exit 1
+```
 
 ## Adding features to your justfile
 

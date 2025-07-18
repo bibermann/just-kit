@@ -181,7 +181,8 @@ function print_clean_path() {
 
 justfile_running_this_script=
 function get_justfile_recipes() {
-  recipes=
+  recipes=  # newline delimited list
+  recipe_empty_list=  # newline delimited list
 
   local path="$1"
   local output=""
@@ -190,6 +191,9 @@ function get_justfile_recipes() {
   local temp_file
 
   local full_path="$(realpath "${path/\~/$HOME}")"
+
+  local recipe_body
+  local recipe_comment
 
   while true; do
     temp_file="$(mktemp)"
@@ -229,8 +233,18 @@ function get_justfile_recipes() {
       # Print the JSON output
       while IFS= read -r recipe; do
         if ! printf '%s\0' "${missing_deps[@]}" | grep -Fxqz -- "$recipe"; then
-          if [[ ! -z "$recipes" ]]; then recipes+=$'\n'; fi
+          if [[ ! -z "$recipes" ]]; then
+            recipes+=$'\n'
+            recipe_empty_list+=$'\n'
+          fi
           recipes+="$recipe"
+          recipe_body="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].body' <<<"$output")"
+          recipe_comment="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].doc // ""' <<<"$output")"
+          if [[ "$recipe_body" == "[]" ]] || [[ "$recipe_comment" == "dummy" ]]; then
+            recipe_empty_list+="1"
+          else
+            recipe_empty_list+="0"
+          fi
         fi
       done < <(jq -r '.recipes | keys . []' <<<"$output")
       return 0
@@ -255,9 +269,11 @@ declare -A name_counts
 declare -A unique_name_to_path
 declare -A overrides_array
 declare -A relevant_path_to_recipes
+declare -A relevant_path_to_recipe_empty_list
 for path in "${paths[@]}"; do
   if get_justfile_recipes "$path"; then
     relevant_path_to_recipes[$path]="$recipes"
+    relevant_path_to_recipe_empty_list[$path]="$recipe_empty_list"
   else
     continue
   fi
@@ -321,14 +337,17 @@ done <<<"$choices"
 
 # Find path pairs that share recipes
 declare -A conflicts
+declare -A auto_preferences
 declare -a path_list=("${!path_to_recipes[@]}")
 for ((i = 0; i < ${#path_list[@]}; i++)); do
   path1="${path_list[i]}"
   readarray -t recipes1 <<<"${path_to_recipes[$path1]}"
+  readarray -t empties1 <<<"${relevant_path_to_recipe_empty_list[$path1]}"
 
   for ((j = i + 1; j < ${#path_list[@]}; j++)); do
     path2="${path_list[j]}"
     readarray -t recipes2 <<<"${path_to_recipes[$path2]}"
+    readarray -t empties2 <<<"${relevant_path_to_recipe_empty_list[$path2]}"
 
     shared_recipes=()
     for recipe1 in "${recipes1[@]}"; do
@@ -345,6 +364,48 @@ for ((i = 0; i < ${#path_list[@]}; i++)); do
 
     if [[ ${#shared_recipes[@]} -gt 0 ]]; then
       conflicts["$path1,$path2"]="${shared_recipes[*]}"
+
+      # Check if all shared recipes are non-empty for path2 and empty for path1
+      all_path2_non_empty=1
+      all_path1_empty=1
+
+      # Check if all shared recipes are non-empty for path1 and empty for path2
+      all_path1_non_empty=1
+      all_path2_empty=1
+
+      for shared_recipe in "${shared_recipes[@]}"; do
+        # Find indices of the shared recipe in both paths
+        for ((k = 0; k < ${#recipes1[@]}; k++)); do
+          if [[ "${recipes1[k]}" == "$shared_recipe" ]]; then
+            if [[ "${empties1[k]}" == "1" ]]; then
+              all_path1_non_empty=0
+            else
+              all_path1_empty=0
+            fi
+            break
+          fi
+        done
+
+        for ((k = 0; k < ${#recipes2[@]}; k++)); do
+          if [[ "${recipes2[k]}" == "$shared_recipe" ]]; then
+            if [[ "${empties2[k]}" == "1" ]]; then
+              all_path2_non_empty=0
+            else
+              all_path2_empty=0
+            fi
+            break
+          fi
+        done
+      done
+
+      # Assign auto_preferences based on the conditions
+      if [[ $all_path2_non_empty -eq 1 && $all_path1_empty -eq 1 ]]; then
+        auto_preferences["$path1,$path2"]="$path2"
+      elif [[ $all_path1_non_empty -eq 1 && $all_path2_empty -eq 1 ]]; then
+        auto_preferences["$path1,$path2"]="$path1"
+      else
+        auto_preferences["$path1,$path2"]=
+      fi
     fi
   done
 done
@@ -363,9 +424,10 @@ for path in "${path_list[@]}"; do
 done
 
 # For each conflict, ask user to resolve
-for conflict in "${!conflicts[@]}"; do
-  IFS=',' read -r path1 path2 <<<"$conflict"
-  shared_recipes_text="${conflicts[$conflict]}"
+for conflict_paths in "${!conflicts[@]}"; do
+  IFS=',' read -r path1 path2 <<<"$conflict_paths"
+  shared_recipes_text="${conflicts[$conflict_paths]}"
+  auto_preference="${auto_preferences[$conflict_paths]}"
 
   # Sort alphabetically
   if [[ "$path1" > "$path2" ]]; then
@@ -396,13 +458,28 @@ for conflict in "${!conflicts[@]}"; do
     done
   fi
 
-  echo -e "\nConflict between paths:"
-  echo "1. $path1"
-  echo "2. $path2"
-  echo "Shared recipes: $shared_recipes_text"
+  if [[ "$auto_preference" == $path1 ]]; then
+    choice=1
+    interactive=0
+  elif [[ "$auto_preference" == $path2 ]]; then
+    choice=2
+    interactive=0
+  else
+    choice=
+    interactive=1
+  fi
+
+  if [[ "$interactive" == "1" ]]; then
+    echo -e "\nConflict between paths:"
+    echo "1. $path1"
+    echo "2. $path2"
+    echo "Shared recipes: $shared_recipes_text"
+  fi
 
   while true; do
-    read -p "Which path should override the other? (1/2): " choice
+    if [[ "$interactive" == "1" ]]; then
+      read -p "Which path should override the other? (1/2): " choice
+    fi
     if [[ "$choice" == "1" ]]; then
       graph[$path1]+=" $path2"
       graph_reversed[$path2]+=" $path1"
