@@ -262,6 +262,13 @@ function get_justfile_recipes() {
   done
 }
 
+# Sort paths by filename first, then by full absolute path
+readarray -t sorted_paths < <(
+  for path in "${paths[@]}"; do
+    printf '%s\t%s\t%s\n' "$(basename "$path")" "$(realpath "${path/#\~/$HOME}")" "$path"
+  done | sort -k1,1 -k2,2 | cut -f3
+)
+
 # Get options
 options=()
 known_imports=()
@@ -270,7 +277,7 @@ declare -A unique_name_to_path
 declare -A overrides_array
 declare -A relevant_path_to_recipes
 declare -A relevant_path_to_recipe_empty_list
-for path in "${paths[@]}"; do
+for path in "${sorted_paths[@]}"; do
   if get_justfile_recipes "$path"; then
     relevant_path_to_recipes[$path]="$recipes"
     relevant_path_to_recipe_empty_list[$path]="$recipe_empty_list"
