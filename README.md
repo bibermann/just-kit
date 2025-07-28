@@ -107,6 +107,8 @@ The python script needs to start with something like this:
 # ///
 ```
 
+You can also write your script [directly within the justfile](https://just.systems/man/en/python-recipes-with-uv.html).
+
 If you do not like those comments, you can instead provide the required configuration
 by running `uv` directly:
 
