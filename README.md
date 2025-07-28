@@ -68,6 +68,9 @@ A `_check-justile-relevance` recipe may be added to a `*.just` file
 to be able to hide it from the list if not relevant for your current project
 (non-zero exit code will hide it).
 
+Note that this recipe is executed with `bash` if no `[script]` attribute is set
+(ignoring the `shell` setting).
+
 Example recipe to hide a `*.just` file when there is no `poetry` tool installed:
 
 ```just
@@ -88,6 +91,7 @@ You can forward a command to a self-contained python app powered by [uv](https:/
 
 ```just
 [no-cd]
+[positional-arguments]
 my-python-app *ARGS:
     @"{{justfile_directory()}}/scripts/my-python-app.py" "$@"
 ```
@@ -114,6 +118,7 @@ by running `uv` directly:
 
 ```just
 [no-cd]
+[positional-arguments]
 my-python-app *ARGS:
     @uv run --no-project --python 3.12 --with typer "{{justfile_directory()}}/scripts/my-python-app.py" "$@"
 ```
@@ -130,6 +135,7 @@ Example for a just recipe that will have auto-completion:
 
 ```just
 [no-cd]
+[positional-arguments]
 my-typer-app *TYPER_ARGS:
     @"{{justfile_directory()}}/scripts/my-typer-app.py" "$@"
 ```
@@ -138,7 +144,8 @@ Example for a just recipe that will have auto-completions using a separate compl
 
 ```just
 [no-cd]
-[script]
+[script("sh")]
+[positional-arguments]
 my-app *TYPER_ARGS:
     "{{justfile_directory()}}/scripts/my-non-typer-app.sh" "$@"
     exit 0
@@ -153,6 +160,7 @@ You can forward a command to a python app.
 
 ```just
 [no-cd]
+[positional-arguments]
 my-python-app *ARGS:
     @"{{justfile_directory()}}/scripts/my-python-app-wrapper-script.sh" "$@"
 ```

@@ -222,7 +222,12 @@ function get_justfile_recipes() {
     if output="$(JUST_UNSTABLE=1 JUST_COLOR=never just --allow-missing --dump --dump-format json -f "$temp_file" 2>&1)"; then
       # Run and evaluate $recipe_checking_relevance recipe if it exists
       if [[ "$CHECK_RELEVANCE" == "true" ]] && grep -q "^$recipe_checking_relevance:" "$full_path" 2>/dev/null; then
-        if JUST_UNSTABLE=1 JUST_COLOR=never just --allow-missing -f "$temp_file" -d "$PWD" "$recipe_checking_relevance" >/dev/null 2>&1; then
+        if JUST_UNSTABLE=1 JUST_COLOR=never \
+          just \
+            --shell bash --shell-arg -ceuo --shell-arg pipefail \
+            --allow-missing -f "$temp_file" -d "$PWD" \
+            "$recipe_checking_relevance" >/dev/null 2>&1
+        then
           :
         else
           echo >&2 "Hiding '$path' (recipe '$recipe_checking_relevance' returned non-zero exit code $?)"
