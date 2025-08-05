@@ -93,7 +93,7 @@ You can forward a command to a self-contained python app powered by [uv](https:/
 [no-cd]
 [positional-arguments]
 my-python-app *ARGS:
-    @"{{justfile_directory()}}/scripts/my-python-app.py" "$@"
+    @"{{justfile_directory()}}/scripts/my-app.py" "$@"
 ```
 
 The python script needs to start with something like this:
@@ -120,7 +120,16 @@ by running `uv` directly:
 [no-cd]
 [positional-arguments]
 my-python-app *ARGS:
-    @uv run --no-project --python 3.12 --with typer "{{justfile_directory()}}/scripts/my-python-app.py" "$@"
+    @uv run --no-project --python 3.12 --with typer "{{justfile_directory()}}/scripts/my-app.py" "$@"
+```
+
+Or if you want to use `uv` from within your project:
+
+```just
+[no-cd]
+[positional-arguments]
+my-python-app *ARGS:
+    @uv run --project "{{justfile_directory()}}" "{{justfile_directory()}}/scripts/my-app.py" "$@"
 ```
 
 See <https://docs.astral.sh/uv/guides/scripts/> for more information.
