@@ -8,11 +8,31 @@ this kit provides a convenient `*.just` file selection tool
 establishing a flexible way to share useful helper utilities
 with the community and your colleagues.
 
+## Prerequisites
+
+- Bash
+- Git
+- [jq](https://jqlang.org/download/)
+- [just](https://just.systems/man/en/packages.html)
+
+## Installation
+
+Clone <https://github.com/bibermann/just-kit> to a proper location, e.g.:
+
+```bash
+git clone https://github.com/bibermann/just-kit ~/.just/kit
+```
+
 ## Enhance your project
 
-From within your project root, run the `setup.sh` script of this repository.
+From within your project root, run the `setup` script of this repository, e.g.:
 
-The `setup.sh` script will import and run the `pick` recipe in your `justfile`
+```bash
+cd /path/to/your/project
+~/.just/kit/setup
+```
+
+The `setup` script will import and run the `pick` recipe in your `justfile`
 (eventually creating it). It will also create a `just-bash` symlink.
 
 ### `just pick`
@@ -22,13 +42,42 @@ will present you a pre-filtered list of `*.just` files to pick from.
 
 This is a convenience tool to manage the imports of your project's `justfile`.
 
+You can have custom imports or recipes in this file, they will not be touched.
+
+### `source just-bash`
+
+The `just-bash` symlink (source with `source just-bash` **in every new shell**) will:
+
+- Enable auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
+- Issue `nvm use`, for convenience.
+
+## Adding features to your justfile
+
+### Location for (new) just files
+
+`*.just` and `.just/**/*.just` files in the project root and all parent directories
+are considered candidates for the selection using `just pick`.
+
+To select `*.just` files from other locations when using `just pick`,
+add or extend the `EXTRA_JUST_ROOTS` variable with the respective paths
+(either in the environment or in the `.env` file in your project root).
+Multiple paths need to be separated with `:`.
+`*.just` files in `EXTRA_JUST_ROOTS` are searched recursively.
+
+### Selection of (new) just files
+
+Run `just pick` from within your project tree to select new `*.just` files.
+
 #### Duplicate recipes
 
 When there are duplicate recipes, you are asked to choose
 which `*.just` file containing the conflicting recipe(s) should override the other,
 defining the import order.
 
-The selection is remembered through a comment next to the import statement.
+##### Automatic duplicate selection
+
+The selection is remembered for the next time
+through a comment next to the import statement.
 
 When the choice is trivial due to empty recipes or recipes having the comment `dummy`,
 the non-empty or non-dummy recipe will be selected to override the other automatically.
@@ -43,25 +92,6 @@ build:
     echo >&2 "ERROR: No final build recipe added to justfile."
     exit 1
 ```
-
-### `source just-bash`
-
-The `just-bash` symlink (source with `source just-bash` **in every new shell**) will:
-
-- Enable auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
-- Issue `nvm use`, for convenience.
-
-## Adding features to your justfile
-
-All `*.just` files located in parent directories and `.just` directories within them
-are considered candidates for the `*.just` file selection.
-
-To select `*.just` files from other locations when using `just pick`,
-add or extend `EXTRA_JUST_ROOTS` variable with the respective paths
-(either in the environment or in the `.env` file in your project root).
-Multiple paths are separated with `:`.
-
-Run `just pick` to select new `*.just` files.
 
 ### Hiding just files
 
@@ -201,6 +231,10 @@ uv run --project "${PARENT_DIR}" "${PARENT_DIR}/my-app.py" "$@"
 ```
 
 ## Development
+
+### Prerequisites
+
+- [uv](https://docs.astral.sh/uv/getting-started/installation/#installing-uv)
 
 ### Setup for development
 
