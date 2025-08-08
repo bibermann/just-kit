@@ -19,6 +19,6 @@ _just_bash_hint:
         printf '\n'
         printf '\e[1mHint:\e[0m'
         printf ' Run '"'"'source just-bash'"'"' to '
-        printf '\e]8;;https://github.com/bibermann/just-kit?tab=readme-ov-file#source-just-bash\e\\enhance your shell\e]8;;\e\\'
+        printf '\e]8;;https://github.com/bibermann/just-kit?tab=readme-ov-file#source-just-bash\e\\enhance your bash session\e]8;;\e\\'
         printf '.\n'
     fi
