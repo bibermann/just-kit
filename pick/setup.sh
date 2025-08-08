@@ -11,6 +11,7 @@ import '$ROOT_DIR/pick.just'
 
 _default:
     just --list
+    @just _just_bash_hint
 EOF
 else
   echo "Updating '$JUSTFILE'"

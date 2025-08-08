@@ -15,17 +15,11 @@ From within your project root, run the `setup.sh` script of this repository.
 The `setup.sh` script will import and run the `pick` recipe in your `justfile`
 (eventually creating it). It will also create a `just-bash` symlink.
 
-The `pick` recipe (run with `just pick`)
+### `just pick`
+
+The `pick` recipe (run with `just pick` from within your project tree)
 will present you a pre-filtered list of `*.just` files to pick from.
 
-The `just-bash` symlink (source with `source just-bash` **in every new shell**) will:
-
-- Enable auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
-- Issue `nvm use`, for convenience.
-
-### Re-configure (select just files to import)
-
-Run `just pick` from within your project tree.
 This is a convenience tool to manage the imports of your project's `justfile`.
 
 #### Duplicate recipes
@@ -49,6 +43,13 @@ build:
     echo >&2 "ERROR: No final build recipe added to justfile."
     exit 1
 ```
+
+### `source just-bash`
+
+The `just-bash` symlink (source with `source just-bash` **in every new shell**) will:
+
+- Enable auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
+- Issue `nvm use`, for convenience.
 
 ## Adding features to your justfile
 
