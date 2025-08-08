@@ -30,7 +30,7 @@ _just() {
     # If we found a matching recipe, handle its completion
     if [[ $recipe_index -ne -1 ]]; then
       # Adjust COMP_WORDS and COMP_CWORD to make it look like we're completing the recipe directly
-      local recipe_words=("${just_recipe_cli_paths[$recipe_index]}")
+      local recipe_words=("app")
       local i
       for ((i = 2; i < ${#COMP_WORDS[@]}; i++)); do
         recipe_words+=("${COMP_WORDS[i]}")
@@ -70,7 +70,23 @@ if command -v just >/dev/null 2>&1; then
 
     # Eval the completion code for all recipes
     for i in "${!just_recipe_names[@]}"; do
-      just_recipe_completion_code="$("${just_recipe_cli_paths[$i]}" --show-completion)"
+      just_recipe_completion_code="$(${just_recipe_cli_paths[$i]} --show-completion)"
+
+      # Patch the generated function to run the (possibly multi-word) launcher via bash -c
+      # This transforms:
+      #   COMPREPLY=( $( env ... _XYZ.PY_COMPLETE=complete_bash $1 ) )
+      # into:
+      #   COMPREPLY=( $( env ... _XYZ.PY_COMPLETE=complete_bash bash -c -- "$1" ) )
+      # And:
+      #   complete -o default -F _xyzpy_completion xyz.py
+      # into:
+      #   complete -o default -F _xyzpy_completion app
+      just_recipe_completion_code="$(echo "$just_recipe_completion_code" \
+        | sed -E 's/(_[A-Za-z0-9_.]+_COMPLETE=complete_bash)[[:space:]]+\$1[[:space:]]*\)/\1 bash -c -- "\$1" )/' \
+        | sed -E 's/^(complete[^\n]*[[:space:]])[^[:space:]]+$/\1app/'
+      )"
+
+      # Extract function name and eval
       just_recipe_completion_function="$(echo "$just_recipe_completion_code" | sed -n 's/^\(_[^(]*\)().*/\1/p' | head -1)"
       just_recipe_completion_functions+=("$just_recipe_completion_function")
       eval "$just_recipe_completion_code"
