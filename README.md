@@ -35,6 +35,10 @@ cd /path/to/your/project
 The `setup` script will import and run the `pick` recipe in your `justfile`
 (eventually creating it). It will also create a `just-bash` symlink.
 
+If there is a `default-just-files.txt` file within your project,
+it will also try to find and import the respective files for you
+to already have them pre-selected when running the `pick` recipe.
+
 ### `just pick`
 
 The `pick` recipe (run with `just pick` from within your project tree)
@@ -50,6 +54,42 @@ The `just-bash` symlink (source with `source just-bash` **in every new shell**) 
 
 - Enable auto-completion for [Typer](https://github.com/fastapi/typer) scripts.
 - Issue `nvm use`, for convenience.
+
+### `default-just-files.txt`
+
+Because _just-kit_ manages your `justfile`'s imports,
+you should not commit it to version control.
+
+This way, you enable yourself and collaborators to import and use arbitrary `*.just` files
+from shared repositories or other sources and personalize your workflows.
+
+On the other hand, you may want minimal onboarding overhead
+by providing a set of recommended `*.just` files.
+For this purpose you can create a `default-just-files.txt` file in your project tree.
+
+The `setup` script will guide your collaborators
+on how to clone the referenced repositories when they are not found
+and pre-select the listed files.
+You may opt out with the `--no-defaults` argument.
+
+Each line in `default-just-files.txt` corresponds to an import statement in the `justfile`,
+but in a normalized form, e.g. `https://example.com/repo:file.just`
+would translate to e.g. `import '../repo/file.just'`,
+depending on where you have cloned it to locally.
+Override comments (see [Automatic duplicate selection](#automatic-duplicate-selection))
+are supported as well.
+
+You can create the `default-just-files.txt` file from your `justfile` at any time
+by running the `lock` script of this repository, e.g.:
+
+```bash
+cd /path/to/your/project
+~/.just/kit/lock
+```
+
+Be sure to move project-specific recipes that you want to keep within the repository
+out of the `justfile` to `*.just` files in your project root (or into a `.just` subdirectory),
+so that you do not need to commit the `justfile`.
 
 ## Adding features to your justfile
 
