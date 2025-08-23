@@ -34,50 +34,50 @@ get_subpath() {
 }
 
 declare -A repo_to_git_root
-declare -A repo_path_to_path
+declare -A normalized_path_to_path
 
 mapfile -t paths < <("$ROOT_DIR/pick/search-just-files.sh")
 for path in "${paths[@]}"; do
   git_root="$(git -C "$(dirname -- "${path/\~/$HOME}")" rev-parse --show-toplevel)"
-  repo_path="$(get_subpath "$(realpath "${path/\~/$HOME}")" "$git_root")"
+  subpath="$(get_subpath "$(realpath "${path/\~/$HOME}")" "$git_root")"
   if [[ "$GIT_ROOT" == "$git_root" ]]; then
-    repo_path_to_path["$repo_path"]="$path"
+    normalized_path_to_path["$subpath"]="$path"
   else
     repo="$("$ROOT_DIR/pick/get-git-remote.sh" "$git_root")"
     repo_to_git_root["$repo"]="$git_root"
-    repo_path_to_path["$repo:$repo_path"]="$path"
+    normalized_path_to_path["$repo:$subpath"]="$path"
   fi
 done
 
-# Extract all repos and repo:repo_path entries from default-just-files.txt and check if they exist
+# Extract all repos and paths from default-just-files.txt and check if they exist
 missing_repos=()
 missing_files=()
 while IFS= read -r line; do
   # Skip empty lines
   [[ -n "$line" ]] || continue
 
-  # Extract all repo:repo_path patterns from the line (before and after # overrides)
-  repo_paths=($(echo "${line//# overrides/}" | grep -oE '[^[:space:],]+' || true))
+  # Extract all normalized paths from the line (before and after # overrides)
+  normalized_paths=($(echo "${line//# overrides/}" | grep -oE '[^[:space:],]+' || true))
 
-  for repo_path in "${repo_paths[@]}"; do
-    if [[ $repo_path == *:* ]]; then
-      repo="${repo_path%:*}"
-      path_after_repo="${repo_path##*:}"
+  for normalized_path in "${normalized_paths[@]}"; do
+    if [[ $normalized_path == *:* ]]; then
+      repo="${normalized_path%:*}"
+      path_after_repo="${normalized_path##*:}"
       if [[ ! -v repo_to_git_root["$repo"] ]]; then
         if [[ ! " ${missing_repos[*]} " =~ " ${repo} " ]]; then
           missing_repos+=("$repo")
           continue
         fi
       fi
-      if [[ ! -v repo_path_to_path["$repo_path"] ]]; then
-        if [[ ! " ${missing_files[*]} " =~ " ${repo_path} " ]]; then
+      if [[ ! -v normalized_path_to_path["$normalized_path"] ]]; then
+        if [[ ! " ${missing_files[*]} " =~ " ${normalized_path} " ]]; then
           missing_files+=("${repo_to_git_root["$repo"]}/$path_after_repo")
         fi
       fi
     else
-      if [[ ! -v repo_path_to_path["$repo_path"] ]]; then
-        if [[ ! " ${missing_files[*]} " =~ " ${repo_path} " ]]; then
-          missing_files+=("$repo_path")
+      if [[ ! -v normalized_path_to_path["$normalized_path"] ]]; then
+        if [[ ! " ${missing_files[*]} " =~ " ${normalized_path} " ]]; then
+          missing_files+=("$normalized_path")
         fi
       fi
     fi
@@ -126,7 +126,7 @@ if [[ ${#missing_files[@]} -gt 0 ]]; then
   fi
 fi
 
-# Replace repo:repo_path pairs with mapped paths and build bash array
+# Replace normalized paths with mapped paths and build bash array
 mapped_lines=()
 while IFS= read -r line; do
   # Skip empty lines
@@ -141,13 +141,13 @@ while IFS= read -r line; do
 
     if [[ "$remaining" =~ ^(# overrides|[^[:space:],]+) ]]; then
       # Found a match at current position
-      repo_path="${BASH_REMATCH[1]}"
-      match_length=${#repo_path}
+      normalized_path="${BASH_REMATCH[1]}"
+      match_length=${#normalized_path}
 
-      if [[ "$repo_path" == "# overrides" ]]; then
-        mapped_line+="$repo_path"
-      elif [[ -v repo_path_to_path["$repo_path"] ]]; then
-        mapped_path="${repo_path_to_path["$repo_path"]}"
+      if [[ "$normalized_path" == "# overrides" ]]; then
+        mapped_line+="$normalized_path"
+      elif [[ -v normalized_path_to_path["$normalized_path"] ]]; then
+        mapped_path="${normalized_path_to_path["$normalized_path"]}"
         mapped_line+="$mapped_path"
       else
         # Should have been reported above, so we silently ignore this import here
