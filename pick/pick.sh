@@ -196,7 +196,7 @@ for path in "${sorted_paths[@]}"; do
         known_imports+=("$realpath_imported")
         state=on
         if [[ "$remainder" =~ \#\ *overrides\ +(.*) ]]; then
-          OVERRIDES="$imported_path"
+          OVERRIDES="${BASH_REMATCH[1]}"
         fi
       fi
     fi
