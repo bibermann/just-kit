@@ -14,7 +14,9 @@ _just_bash_hint:
       {
         [ -f "$HOME/.nvm/nvm.sh" ] || \
         { [ -f justfile ] && grep -q -E '\*TYPER_ARGS\b' justfile; } || \
-        { [ -f Justfile ] && grep -q -E '\*TYPER_ARGS\b' Justfile; }
+        { [ -f Justfile ] && grep -q -E '\*TYPER_ARGS\b' Justfile; } || \
+        { [ -f .justfile ] && grep -q -E '\*TYPER_ARGS\b' .justfile; } || \
+        { [ -f .Justfile ] && grep -q -E '\*TYPER_ARGS\b' .Justfile; }
       }; then
         printf '\n'
         printf '\e[1mHint:\e[0m'
