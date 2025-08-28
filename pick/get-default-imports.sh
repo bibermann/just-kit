@@ -4,7 +4,7 @@ set -euo pipefail
 ROOT_DIR="$(dirname -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 
-default_just_files_filename='default-just-files.txt'
+default_just_files_filename='.just.lock'
 
 if ! [[ -f "$default_just_files_filename" ]]; then
   exit 0
@@ -49,7 +49,7 @@ for path in "${paths[@]}"; do
   fi
 done
 
-# Extract all repos and paths from default-just-files.txt and check if they exist
+# Extract all repos and paths from .just.lock and check if they exist
 missing_repos=()
 missing_files=()
 while IFS= read -r line; do

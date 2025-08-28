@@ -5,7 +5,7 @@ ROOT_DIR="$(dirname -- "$(dirname -- "${BASH_SOURCE[0]}")")"
 GIT_ROOT="$(git rev-parse --show-toplevel)"
 
 justfile="${1:-justfile}"
-default_just_files_filename='default-just-files.txt'
+default_just_files_filename='.just.lock'
 
 if ! [[ -f "$justfile" ]]; then
   echo "Error: $justfile not found" >&2
@@ -81,6 +81,6 @@ while IFS= read -r line; do
 
 done < "$justfile"
 
-# Write to default-just-files.txt
+# Write to .just.lock
 printf '%s\n' "${output_lines[@]}" > "$default_just_files_filename"
 echo "Generated $default_just_files_filename with ${#output_lines[@]} entries"
