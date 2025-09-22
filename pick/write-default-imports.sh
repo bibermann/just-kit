@@ -21,10 +21,10 @@ declare -A path_to_repo_path
 
 mapfile -t paths < <("$ROOT_DIR/pick/search-just-files.sh")
 for path in "${paths[@]}"; do
-  git_root="$(git -C "$(dirname -- "${path/\~/$HOME}")" rev-parse --show-toplevel)"
+  git_root="$(git -C "$(dirname -- "${path/#\~/$HOME}")" rev-parse --show-toplevel)"
   path_to_git_root["$path"]="$git_root"
 
-  repo_path="$(get_subpath "$(realpath "${path/\~/$HOME}")" "$git_root")"
+  repo_path="$(get_subpath "$(realpath "${path/#\~/$HOME}")" "$git_root")"
   if [[ "$GIT_ROOT" == "$git_root" ]]; then
     path_to_repo_path["$path"]="$repo_path"
   else

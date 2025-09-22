@@ -92,28 +92,30 @@ if [ -n "${EXTRA_JUST_ROOTS:-}" ]; then
       echo >&2 "Warning: $EXTRA_DIR in \$EXTRA_JUST_ROOTS is not a directory."
       continue
     fi
-    CURRENT_DIR="$EXTRA_DIR"
-    CURRENT_PREFIX="${CURRENT_DIR/$HOME/\~}/"
+    CURRENT_DIR="${EXTRA_DIR%%/}/"
+    CURRENT_PREFIX="${CURRENT_DIR/#$HOME\//\~\/}"
 
-    search_justfiles "${CURRENT_DIR%%/}/**.just" "$CURRENT_DIR" "$CURRENT_PREFIX"
+    search_justfiles "$CURRENT_DIR**.just" "$CURRENT_DIR" "$CURRENT_PREFIX"
 
     if [ "$CURRENT_DIR" = "/" ]; then
       continue
     fi
 
     CURRENT_DIR=$(dirname "$CURRENT_DIR")
-    CURRENT_PREFIX="${CURRENT_DIR/$HOME/\~}/"
+    CURRENT_DIR="${CURRENT_DIR%%/}/"
+    CURRENT_PREFIX="${CURRENT_DIR/#$HOME\//\~\/}"
 
     while :; do
-      search_justfiles "${CURRENT_DIR%%/}/*.just" "$CURRENT_DIR" "$CURRENT_PREFIX" -maxdepth 1
-      search_justfiles "${CURRENT_DIR%%/}/.just/**.just" "${CURRENT_DIR%%/}/.just" "$CURRENT_PREFIX.just/"
+      search_justfiles "$CURRENT_DIR*.just" "$CURRENT_DIR" "$CURRENT_PREFIX" -maxdepth 1
+      search_justfiles "$CURRENT_DIR.just/**.just" "$CURRENT_DIR.just" "$CURRENT_PREFIX.just/"
 
       if [ "$CURRENT_DIR" = "/" ]; then
         break
       fi
 
       CURRENT_DIR=$(dirname "$CURRENT_DIR")
-      CURRENT_PREFIX="${CURRENT_DIR/$HOME/\~}/"
+      CURRENT_DIR="${CURRENT_DIR%%/}/"
+      CURRENT_PREFIX="${CURRENT_DIR/#$HOME\//\~\/}"
     done
   done
 fi

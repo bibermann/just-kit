@@ -38,8 +38,8 @@ declare -A normalized_path_to_path
 
 mapfile -t paths < <("$ROOT_DIR/pick/search-just-files.sh")
 for path in "${paths[@]}"; do
-  git_root="$(git -C "$(dirname -- "${path/\~/$HOME}")" rev-parse --show-toplevel)"
-  subpath="$(get_subpath "$(realpath "${path/\~/$HOME}")" "$git_root")"
+  git_root="$(git -C "$(dirname -- "${path/#\~/$HOME}")" rev-parse --show-toplevel)"
+  subpath="$(get_subpath "$(realpath "${path/#\~/$HOME}")" "$git_root")"
   if [[ "$GIT_ROOT" == "$git_root" ]]; then
     normalized_path_to_path["$subpath"]="$path"
   else

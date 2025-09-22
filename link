@@ -1,0 +1,9 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+ROOT_DIR="$(dirname -- "${BASH_SOURCE[0]}")"
+
+"$ROOT_DIR/bash/create-symlink.sh"
+"$ROOT_DIR/pick/update-justfile.sh" "$@"
+"$ROOT_DIR/pick/pick.sh" true --write-on-cancel
+just _just_bash_hint

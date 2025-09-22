@@ -25,14 +25,14 @@ git clone https://github.com/bibermann/just-kit ~/.just/kit
 
 ## Enhance your project
 
-From within your project root, run the `setup` script of this repository, e.g.:
+From within your project root, run the `link` script of this repository, e.g.:
 
 ```bash
 cd /path/to/your/project
-~/.just/kit/setup
+~/.just/kit/link
 ```
 
-The `setup` script will import and run the `pick` recipe in your `justfile`
+The `link` script will import and run the `pick` recipe in your `justfile`
 (eventually creating it). It will also create a `just-bash` symlink.
 
 If there is a `.just.lock` file within your project,
@@ -67,7 +67,7 @@ On the other hand, you may want minimal onboarding overhead
 by providing a set of recommended `*.just` files.
 For this purpose you can create a `.just.lock` file in your project tree.
 
-The `setup` script will guide your collaborators
+The `link` script will guide your collaborators
 on how to clone the referenced repositories when they are not found
 and pre-select the listed files.
 You may opt out with the `--no-defaults` argument.

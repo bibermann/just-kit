@@ -12,10 +12,11 @@ fi
 JUSTFILE=$(find "$PWD" -maxdepth 1 -type f -name "[Jj]ustfile" -o -name "\.[Jj]ustfile" | head -n1)
 if [[ -z "$JUSTFILE" ]]; then
   echo "Creating '$PWD/justfile'"
-  echo "$DEFAULT_IMPORTS" >justfile
+  if [[ -n "$DEFAULT_IMPORTS" ]]; then
+    echo "$DEFAULT_IMPORTS" >justfile
+  fi
   cat <<EOF >>justfile
-import '$ROOT_DIR/pick.just'
-
+import '${ROOT_DIR/#$HOME\//~\/}/pick.just'
 _default:
     just --list
     @just _just_bash_hint
@@ -23,10 +24,10 @@ EOF
 else
   echo "Updating '$JUSTFILE'"
   TMPFILE=$(mktemp)
-  echo "$DEFAULT_IMPORTS" >"$TMPFILE"
-  echo "import '$ROOT_DIR/pick.just'" >>"$TMPFILE"
+  if [[ -n "$DEFAULT_IMPORTS" ]]; then
+    echo "$DEFAULT_IMPORTS" >"$TMPFILE"
+  fi
+  echo "import '${ROOT_DIR/#$HOME\//~\/}/pick.just'" >>"$TMPFILE"
   cat "$JUSTFILE" >>"$TMPFILE"
   mv "$TMPFILE" "$JUSTFILE"
 fi
-
-just pick
