@@ -12,6 +12,7 @@ with the community and your colleagues.
 
 - Bash
 - Git
+- [dialog](https://invisible-island.net/dialog/)
 - [jq](https://jqlang.org/download/)
 - [just](https://just.systems/man/en/packages.html)
 

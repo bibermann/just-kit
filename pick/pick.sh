@@ -154,7 +154,7 @@ function get_justfile_recipes() {
     elif [[ "$output" =~ error:\ Recipe\ \`.*\`\ first\ defined\ .*\ redefined\ .* ]]; then
       need_allow_duplicate_recipes=true
     else
-      echo 1>&2 "$output"
+      echo >&2 "$output"
       return 1
     fi
 

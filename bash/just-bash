@@ -99,7 +99,7 @@ else
 fi
 
 for msg in "${success_messages[@]}"; do echo "$msg"; done
-for msg in "${error_messages[@]}"; do echo 1>&2 "$msg"; done
+for msg in "${error_messages[@]}"; do echo >&2 "$msg"; done
 if [ ${#error_messages[@]} -gt 0 ]; then return 1; fi
 
 export IS_JUST_BASH_SOURCED=1
