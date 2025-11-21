@@ -229,7 +229,7 @@ if ! choices=$("${cmd[@]}" "${options[@]}" 2>&1 >/dev/tty); then
   if [[ "$WRITE_ON_CANCEL" == "true" ]]; then
     choices=''
   else
-    exit 0
+    exit 1
   fi
 fi
 clear -x
@@ -515,3 +515,5 @@ done <"$JUSTFILE"
 
 mv "$temp_file" "$JUSTFILE"
 trap - EXIT
+
+echo "Done: just-kit completed."

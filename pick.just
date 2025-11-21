@@ -5,8 +5,9 @@ import 'settings.just'
 [no-exit-message]
 [group: "maintenance"]
 pick CHECK_RELEVANCE="true":
-    "{{source_directory()}}/pick/pick.sh" "{{CHECK_RELEVANCE}}"
-    just _just_bash_hint
+    if "{{source_directory()}}/pick/pick.sh" "{{CHECK_RELEVANCE}}"; then
+        just _just_bash_hint
+    fi
 
 [script("sh")]
 _just_bash_hint:
