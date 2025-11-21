@@ -140,8 +140,9 @@ function get_justfile_recipes() {
           fi
           recipes+="$recipe"
           recipe_body="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].body' <<<"$output")"
+          recipe_deps="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].dependencies' <<<"$output")"
           recipe_comment="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].doc // ""' <<<"$output")"
-          if [[ "$recipe_body" == "[]" ]] || [[ "$recipe_comment" == "dummy" ]]; then
+          if [[ "$recipe_body" == "[]" && "$recipe_deps" == "[]" ]] || [[ "$recipe_comment" == "dummy" ]]; then
             recipe_empty_list+="1"
           else
             recipe_empty_list+="0"
