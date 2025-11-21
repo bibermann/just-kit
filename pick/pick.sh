@@ -77,16 +77,31 @@ function print_clean_path() {
 
 justfile_running_this_script=
 function get_justfile_recipes() {
+  # Args: path1 [path2 [recipe]]
+  # path1 and path2 are added as imports and then the resulting recipes are evaluated.
+  # If path2 is omitted, justfile_running_this_script is also set.
+  # If recipe is omitted, all recipes are stored.
+
   recipes=  # newline delimited list
   recipe_empty_list=  # newline delimited list
+  recipe_json_list=  # newline delimited list
 
-  local path="$1"
+  local path="$1"; shift
+  local path2=
+  if [[ $# -gt 0 ]]; then path2="$1"; shift; fi
+  local specific_recipe=
+  if [[ $# -gt 0 ]]; then specific_recipe="$1"; shift; fi
+
   local output=""
   local missing_deps=()
   local need_allow_duplicate_recipes=false
   local temp_file
 
   local full_path="$(realpath "${path/#\~/$HOME}")"
+  local full_path2=
+  if [[ -n "$path2" ]]; then
+    full_path2="$(realpath "${path2/#\~/$HOME}")"
+  fi
 
   local recipe_body
   local recipe_comment
@@ -103,14 +118,19 @@ function get_justfile_recipes() {
         echo "$dep *ARGS:"
       done
       echo "import '$full_path'"
+      if [[ -n "$full_path2" ]]; then
+        echo "import '$full_path2'"
+      fi
     } >"$temp_file"
 
     if grep -q "^${recipe_running_this_script}[: ]" "$full_path" 2>/dev/null; then
-      if [[ ! -z "$justfile_running_this_script" ]]; then
-        echo >&2 "Error: Multiple justfiles containing recipe '$recipe_running_this_script': '$justfile_running_this_script', '$path'"
-        exit 1
+      if [[ -z "$path2" ]]; then
+        if [[ -n "$justfile_running_this_script" ]]; then
+          echo >&2 "Error: Multiple justfiles containing recipe '$recipe_running_this_script': '$justfile_running_this_script', '$path'"
+          exit 1
+        fi
+        justfile_running_this_script="$path"
       fi
-      justfile_running_this_script="$path"
       echo >&2 "Hiding '$path' (contains recipe running this script)"
       return 1
     fi
@@ -133,12 +153,17 @@ function get_justfile_recipes() {
 
       # Print the JSON output
       while IFS= read -r recipe; do
+        if [[ -n "$specific_recipe" && "$recipe" != "$specific_recipe" ]]; then
+          continue
+        fi
         if ! printf '%s\0' "${missing_deps[@]}" | grep -Fxqz -- "$recipe"; then
-          if [[ ! -z "$recipes" ]]; then
+          if [[ -n "$recipes" ]]; then
             recipes+=$'\n'
             recipe_empty_list+=$'\n'
+            recipe_json_list+=$'\n'
           fi
           recipes+="$recipe"
+          recipe_json_list+="$(jq -c --arg recipe "$recipe" '.recipes[$recipe]' <<<"$output")"
           recipe_body="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].body' <<<"$output")"
           recipe_deps="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].dependencies' <<<"$output")"
           recipe_comment="$(jq -r --arg recipe "$recipe" '.recipes[$recipe].doc // ""' <<<"$output")"
@@ -178,10 +203,12 @@ declare -A name_counts
 declare -A unique_name_to_path
 declare -A overrides_array
 declare -A relevant_path_to_recipes
+declare -A relevant_path_to_recipe_json_list
 declare -A relevant_path_to_recipe_empty_list
 for path in "${sorted_paths[@]}"; do
   if get_justfile_recipes "$path"; then
     relevant_path_to_recipes[$path]="$recipes"
+    relevant_path_to_recipe_json_list[$path]="$recipe_json_list"
     relevant_path_to_recipe_empty_list[$path]="$recipe_empty_list"
   else
     continue
@@ -248,26 +275,47 @@ done <<<"$choices"
 #done
 
 # Find path pairs that share recipes
+echo "Checking for conflicts..."
 declare -A conflicts
 declare -A auto_preferences
 declare -a path_list=("${!path_to_recipes[@]}")
 for ((i = 0; i < ${#path_list[@]}; i++)); do
   path1="${path_list[i]}"
   readarray -t recipes1 <<<"${path_to_recipes[$path1]}"
+  readarray -t jsons1 <<<"${relevant_path_to_recipe_json_list[$path1]}"
   readarray -t empties1 <<<"${relevant_path_to_recipe_empty_list[$path1]}"
 
   for ((j = i + 1; j < ${#path_list[@]}; j++)); do
     path2="${path_list[j]}"
     readarray -t recipes2 <<<"${path_to_recipes[$path2]}"
+    readarray -t jsons2 <<<"${relevant_path_to_recipe_json_list[$path2]}"
     readarray -t empties2 <<<"${relevant_path_to_recipe_empty_list[$path2]}"
 
     shared_recipes=()
-    for recipe1 in "${recipes1[@]}"; do
+    for idx1 in "${!recipes1[@]}"; do
+      recipe1="${recipes1[$idx1]}"
+      json1="${jsons1[$idx1]}"
       if [[ -z "$recipe1" || "$recipe1" == "$recipe_checking_relevance" ]]; then
         continue
       fi
-      for recipe2 in "${recipes2[@]}"; do
-        if [[ "$recipe1" == "$recipe2" ]]; then
+      for idx2 in "${!recipes2[@]}"; do
+        recipe2="${recipes2[$idx2]}"
+        json2="${jsons2[$idx2]}"
+        if [[ "$recipe1" == "$recipe2" && "$json1" != "$json2" ]]; then
+          # Only consider the recipe as conflicting, if the definition is different
+          # when importing the paths in a different order. We cannot only check the
+          # jsons of the two recipes, because when one path has overriden a recipe whose
+          # previous version is imported in both paths, we would see different jsons
+          # although it would not be a conflict. So we will import both in different
+          # orders and then check their jsons.
+          get_justfile_recipes "$path1" "$path2" "$recipe1"
+          json1="${recipe_json_list[0]}"
+          get_justfile_recipes "$path2" "$path1" "$recipe1"
+          json2="${recipe_json_list[0]}"
+          if [[ "$json1" == "$json2" ]]; then
+            continue
+          fi
+
           shared_recipes+=("$recipe1")
           break
         fi
@@ -465,7 +513,7 @@ done
 #done
 final_order=("${sorted_paths[@]}")
 
-if [[ ! -z "$justfile_running_this_script" ]]; then
+if [[ -n "$justfile_running_this_script" ]]; then
   final_order+=("$justfile_running_this_script")
 fi
 
