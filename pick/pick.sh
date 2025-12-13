@@ -95,6 +95,7 @@ function get_justfile_recipes() {
   local output=""
   local missing_deps=()
   local need_allow_duplicate_recipes=false
+  local need_allow_duplicate_variables=false
   local temp_file
 
   local full_path="$(realpath "${path/#\~/$HOME}")"
@@ -113,6 +114,9 @@ function get_justfile_recipes() {
     {
       if $need_allow_duplicate_recipes; then
         echo 'set allow-duplicate-recipes'
+      fi
+      if $need_allow_duplicate_variables; then
+        echo 'set allow-duplicate-variables'
       fi
       for dep in "${missing_deps[@]}"; do
         echo "$dep *ARGS:"
@@ -179,6 +183,8 @@ function get_justfile_recipes() {
       missing_deps+=("${BASH_REMATCH[1]}")
     elif [[ "$output" =~ error:\ Recipe\ \`.*\`\ first\ defined\ .*\ redefined\ .* ]]; then
       need_allow_duplicate_recipes=true
+    elif [[ "$output" =~ error:\ Variable\ \`.*\`\ has\ multiple\ definitions ]]; then
+      need_allow_duplicate_variables=true
     else
       echo >&2 "$output"
       return 1
