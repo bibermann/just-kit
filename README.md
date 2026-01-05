@@ -1,12 +1,24 @@
 # just-kit
 
-A kit for managing reusable tools and [just](https://github.com/casey/just) recipes
-to ease your daily workflows and maintenance tasks.
+A toolkit for [just](https://github.com/casey/just) that simplifies
+managing project-specific workflows using reusable `*.just` files.
 
-Designed as an import manager for your project's `justfile`,
-this kit provides a convenient `*.just` file selection tool
-establishing a flexible way to share useful helper utilities
-with the community and your colleagues.
+**just-kit** acts as an import manager for your project's `justfile`.
+It allows you to discover and select shared [just](https://github.com/casey/just) recipes
+while maintaining the flexibility to customize configurations per project or per developer.
+
+This approach standardizes common maintenance tasks across teams
+without imposing a rigid "one-size-fits-all" structure
+or cluttering repositories with unmaintainable, copy-pasted scripts.
+
+**Key Features**:
+
+- `./link`: Initialize `justfile` management and create the `just-bash` symlink.
+- `just pick`: An interactive CLI to select the `*.just` files you need.
+- `source just-bash`: Enables quality-of-life features like shell completion for Typer.
+- `.just.lock`: A lockfile to define and share recommended default recipes.
+
+Ideal for developers who want consistent tooling with low-friction customization.
 
 ## Prerequisites
 
@@ -15,6 +27,7 @@ with the community and your colleagues.
 - [dialog](https://invisible-island.net/dialog/)
 - [jq](https://jqlang.org/download/)
 - [just](https://just.systems/man/en/packages.html)
+- [uv](https://github.com/astral-sh/uv) (optional but recommended)
 
 ## Installation
 
@@ -25,6 +38,8 @@ git clone https://github.com/bibermann/just-kit ~/.just/kit
 ```
 
 ## Enhance your project
+
+### `link`
 
 From within your project root, run the `link` script of this repository, e.g.:
 
