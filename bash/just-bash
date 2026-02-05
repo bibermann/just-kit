@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
-# NOTE: This file needs to be sourced.
+# Note: This file needs to be sourced.
+# Docs: https://github.com/bibermann/just-kit?tab=readme-ov-file#source-just-bash
 
 success_messages=()
 error_messages=()
